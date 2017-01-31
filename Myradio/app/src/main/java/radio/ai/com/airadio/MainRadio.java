@@ -1,15 +1,26 @@
 package radio.ai.com.airadio;
 
+import android.media.AudioManager;
+import android.media.MediaPlayer;
+import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.widget.Button;
+
+import java.io.IOException;
 
 public class MainRadio extends AppCompatActivity {
+
+    boolean isPlaying = false;
+    private final static String powerfm_stream = "http://195.142.3.83/power/PowerFM_mpeg_128_home/icecast.audio?";
+    Button play;
+    MediaPlayer mediaPlayer;
+    boolean prepared = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -18,12 +29,36 @@ public class MainRadio extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
+
+        play = (Button) findViewById(R.id.play);
+        play.setEnabled(false);
+
+        mediaPlayer = new MediaPlayer();
+        try {
+            mediaPlayer.setDataSource(getApplicationContext(), Uri.parse(powerfm_stream));
+            mediaPlayer.setAudioStreamType(AudioManager.STREAM_MUSIC);
+            mediaPlayer.prepareAsync();
+            mediaPlayer.setOnPreparedListener(new MediaPlayer.OnPreparedListener() {
+                @Override
+                public void onPrepared(MediaPlayer mp) {
+                    play.setEnabled(true);
+                    play.setText("Play");
+                }
+            });
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        play.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                isPlaying = !isPlaying;
+                if (isPlaying) {
+                    mediaPlayer.start();
+                    play.setText("Pause");
+                } else {
+                    mediaPlayer.pause();
+                    play.setText("Play");
+                }
             }
         });
     }
